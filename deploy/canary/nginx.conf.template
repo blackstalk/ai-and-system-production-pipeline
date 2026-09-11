@@ -1,0 +1,38 @@
+# Weighted traffic split between the stable and canary tracks.
+#
+# This is the same primitive a real load balancer (AWS ALB weighted
+# target groups, an Envoy/Istio VirtualService, or an API Gateway
+# canary stage) provides — nginx's `split_clients` directive is used
+# here purely because it requires no external infrastructure to run
+# locally. See docs/deployment-strategy.md for how this maps onto
+# managed cloud equivalents.
+
+events {}
+
+http {
+    # 95% of requests (by a hash of a client-supplied key) go to
+    # "stable", 5% go to "canary". Adjust the percentages to change the
+    # canary traffic weight described in docs/deployment-strategy.md.
+    split_clients "${remote_addr}${request_id}$msec" $upstream_track {
+        5%      canary;
+        *       stable;
+    }
+
+    upstream stable {
+        server stable:8000;
+    }
+
+    upstream canary {
+        server canary:8000;
+    }
+
+    server {
+        listen 8080;
+
+        location / {
+            proxy_set_header X-Request-Id $request_id;
+            proxy_set_header X-Deployment-Track $upstream_track;
+            proxy_pass http://$upstream_track;
+        }
+    }
+}

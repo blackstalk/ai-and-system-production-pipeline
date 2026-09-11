@@ -1,0 +1,43 @@
+# Local simulation of a canary deployment: two identical application
+# containers (stable, canary) behind an nginx router that splits traffic
+# by weight, plus a Prometheus instance that scrapes both tracks so
+# their golden signals can be compared side by side. This is a
+# reference pattern for local demonstration, not a production canary
+# controller — see docs/deployment-strategy.md for how the same shape
+# maps onto Kubernetes, ECS, or Lambda aliases.
+services:
+  stable:
+    build: .
+    environment:
+      - DEPLOYMENT_TRACK=stable
+      - LOG_LEVEL=INFO
+    expose:
+      - "8000"
+
+  canary:
+    build: .
+    environment:
+      - DEPLOYMENT_TRACK=canary
+      - LOG_LEVEL=INFO
+    expose:
+      - "8000"
+
+  router:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./deploy/canary/nginx.conf.template:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - stable
+      - canary
+
+  prometheus:
+    image: prom/prometheus:v2.55.1
+    volumes:
+      - ./deploy/canary/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - stable
+      - canary

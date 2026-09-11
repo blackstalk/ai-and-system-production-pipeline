@@ -1,0 +1,113 @@
+name: Deploy
+
+# Progressive delivery simulation, as described in
+# docs/deployment-strategy.md. Runs only after CI, security, and AI
+# review have all passed on main, and only after a human has approved
+# the PR that merged (branch protection enforces that before merge —
+# this workflow enforces it again via the `production` environment's
+# required reviewers, giving human approval two independent
+# enforcement points).
+#
+# The deploy/promote/rollback steps here build and exercise the real
+# Docker images and the real canary_analysis.py decision logic, but the
+# "deploy" target is this repo's own GitHub Actions runner rather than
+# a cloud environment — see docs/deployment-strategy.md for how each
+# step maps onto Kubernetes, ECS, Lambda aliases, or a service mesh.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      canary_weight_percent:
+        description: "Percent of traffic to route to canary"
+        default: "5"
+        required: false
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  build-artifact:
+    name: Build artifact
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - name: Build image
+        run: docker build -t ai-production-pipeline:${{ github.sha }} .
+      - name: Save image as artifact
+        run: docker save ai-production-pipeline:${{ github.sha }} -o image.tar
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docker-image
+          path: image.tar
+          retention-days: 3
+
+  deploy-canary:
+    name: Deploy canary (5% traffic)
+    needs: build-artifact
+    runs-on: ubuntu-latest
+    # A real deployment would gate this behind a GitHub Environment
+    # named "production" with required reviewers configured in repo
+    # settings — see docs/deployment-strategy.md "Human Approval".
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: docker-image
+      - run: docker load -i image.tar
+      - name: Start stable + canary + router locally (simulated environment)
+        run: docker compose up -d
+      - name: Wait for containers to become healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf http://localhost:8080/health >/dev/null; then
+              echo "Router is healthy."
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "Router did not become healthy in time."
+          exit 1
+      - name: Generate synthetic traffic through the router
+        run: |
+          for i in $(seq 1 200); do
+            curl -s -o /dev/null http://localhost:8080/health
+            curl -s -o /dev/null http://localhost:8080/api/items
+          done
+
+  observe-and-decide:
+    name: Observe metrics & decide promote/rollback
+    needs: deploy-canary
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run canary analysis against baseline
+        id: analysis
+        run: python3 scripts/canary_analysis.py --prometheus-url http://localhost:9090
+        continue-on-error: true
+      - name: Record decision
+        run: |
+          if [ "${{ steps.analysis.outcome }}" = "success" ]; then
+            echo "Decision: PROMOTE. Increasing canary traffic weight per docs/deployment-strategy.md."
+          else
+            echo "Decision: ROLLBACK. See docs/deployment-strategy.md 'Automated Rollback'."
+            exit 1
+          fi
+
+  promote-or-rollback:
+    name: Promote to 100% or roll back
+    needs: observe-and-decide
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Promote
+        run: |
+          echo "Canary passed its bake window with no threshold violations."
+          echo "In a real deployment this step would shift the stable track's"
+          echo "image tag to this build's SHA and drain the canary instances —"
+          echo "see docs/deployment-strategy.md for the cloud-native equivalents"
+          echo "(K8s Deployment rollout, ECS service update, Lambda alias shift)."

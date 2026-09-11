@@ -1,0 +1,10 @@
+# Default owner for everything. In a real org this would list a team
+# (e.g. @org/platform-team) rather than an individual, and high-risk
+# paths below would typically require a second, more senior owner.
+*       @hochoa
+
+# High-risk areas get explicit ownership so GitHub's branch protection
+# can require their review even if CODEOWNERS is otherwise loose.
+/app/core/            @hochoa
+/.github/workflows/   @hochoa
+/deploy/              @hochoa

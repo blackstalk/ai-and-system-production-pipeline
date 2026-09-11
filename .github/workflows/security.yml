@@ -1,0 +1,93 @@
+name: Security
+
+# Layer: automated security scanning, as described in
+# docs/threat-model.md. Requires no paid services or secrets — Bandit
+# and pip-audit both run entirely against public data. See that doc for
+# where Dependabot, GitHub Advanced Security, Snyk, and Trivy would slot
+# in for a team with a paid tier or self-hosted runners.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  schedule:
+    # Dependencies can grow new vulnerabilities without any code change,
+    # so this also runs weekly against main independent of PR activity.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: security-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bandit:
+    name: Static application security testing (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - name: Run Bandit against application code
+        run: bandit -q -c pyproject.toml -r app
+      - name: Run Bandit against examples/ (expected to find issues)
+        # examples/ intentionally contains vulnerable snippets used to
+        # demonstrate this scanner — see examples/README.md. `|| true`
+        # keeps this informational without blocking the merge gate,
+        # since failing on purpose here would be misleading.
+        run: bandit -r examples || true
+
+  dependency-audit:
+    name: Dependency vulnerability scan (pip-audit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -e ".[dev]"
+      - run: pip-audit --skip-editable
+
+  secret-scan-guidance:
+    name: Secret scanning (guidance)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check for GitHub secret scanning / push protection
+        run: |
+          cat <<'EOF'
+          This job is intentionally a no-op placeholder.
+
+          Real secret scanning for a public GitHub repository should use
+          GitHub's built-in secret scanning + push protection
+          (Settings > Code security > Secret scanning), which runs
+          server-side on every push and requires no workflow YAML. It
+          is enabled automatically for public repositories and can be
+          enforced for private ones with GitHub Advanced Security.
+
+          For defense in depth beyond GitHub's own scanner, see
+          docs/threat-model.md for where a tool such as Gitleaks or
+          TruffleHog could be added as an explicit CI step.
+          EOF
+
+  unsafe-config-check:
+    name: Unsafe configuration checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail if DEBUG-style defaults are enabled anywhere
+        run: |
+          if grep -RniE "debug[ _]?=[ ]*true" --include="*.py" app; then
+            echo "Found a hardcoded debug=true default in application code."
+            exit 1
+          fi
+          echo "No unsafe debug defaults found."
+      - name: Fail if a Dockerfile runs as root
+        run: |
+          if ! grep -q "^USER " Dockerfile; then
+            echo "Dockerfile does not switch to a non-root USER."
+            exit 1
+          fi
+          echo "Dockerfile runs as a non-root user."
