@@ -5,9 +5,9 @@ safely: AI writes it, AI reviews it, deterministic systems verify it,
 canary deployment and monitoring catch what slips through, and a human
 makes the final call at every point that matters.
 
-[![CI](https://github.com/hochoa/ai-production-pipeline/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
-[![Security](https://github.com/hochoa/ai-production-pipeline/actions/workflows/security.yml/badge.svg)](.github/workflows/security.yml)
-[![AI Review](https://github.com/hochoa/ai-production-pipeline/actions/workflows/ai-review.yml/badge.svg)](.github/workflows/ai-review.yml)
+[![CI](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
+[![Security](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/security.yml/badge.svg)](.github/workflows/security.yml)
+[![AI Review](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/ai-review.yml/badge.svg)](.github/workflows/ai-review.yml)
 
 ## Why This Exists
 
