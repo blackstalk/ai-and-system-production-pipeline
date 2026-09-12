@@ -32,7 +32,8 @@ defense-in-depth pipeline, never the sole gate. Concretely:
   they judge the finding to be wrong or acceptable — the same authority they
   have over any other CI check.
 - The AI reviewer being unavailable (no API key, API outage, unparseable
-  response) never blocks a merge by itself — see `scripts/ai_review.py`'s
+  response) never blocks a merge by itself — see
+  [`ai-review-action`](https://github.com/blackstalk/ai-review-action)'s
   graceful-skip behavior.
 - A human must approve every PR regardless of AI review outcome — see
   [ADR-004](004-human-remains-final-decision-maker.md).

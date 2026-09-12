@@ -101,6 +101,14 @@ next one will be. Each layer covers what the others structurally can't:
 
 ## AI Review Strategy
 
+Review is performed by [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action),
+a standalone, stack-agnostic GitHub Action — this repo's
+[`ai-review.yml`](.github/workflows/ai-review.yml) just calls it, passing
+its own customized prompt ([`prompts/code-review.md`](prompts/code-review.md)).
+Extracting review logic into a shared action means the same reviewer is
+usable from any repo, in any language, with one `uses:` line — see
+[ADR-005](docs/adr/005-ai-review-is-a-shared-versioned-action.md).
+
 The reviewer is instructed to **ignore** formatting, naming preference, and
 anything deterministic tooling already owns, and to **prioritize**:
 
@@ -166,7 +174,7 @@ python3 scripts/canary_analysis.py --prometheus-url http://localhost:9090
 |---|---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | every PR, push to `main` | No | ruff, mypy, pytest + coverage, Docker build validation |
 | [`security.yml`](.github/workflows/security.yml) | every PR, push to `main`, weekly | No | Bandit, pip-audit, unsafe-config checks, secret-scanning guidance |
-| [`ai-review.yml`](.github/workflows/ai-review.yml) | every PR | Yes — `ANTHROPIC_API_KEY`, skips gracefully if unset | LLM review of the diff, posted as a PR comment, fails on CRITICAL/HIGH |
+| [`ai-review.yml`](.github/workflows/ai-review.yml) | every PR | Yes — `ANTHROPIC_API_KEY`, skips gracefully if unset | Calls [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action); posts findings as a PR comment, fails on CRITICAL/HIGH |
 | [`deploy.yml`](.github/workflows/deploy.yml) | push to `main` (after merge) | No (simulated deploy target) | Build artifact → canary deploy → observe → promote/rollback |
 
 ## Canary Strategy
@@ -212,7 +220,7 @@ Documented in full, without building a full ML platform: [docs/ml-extension.md](
 ```text
 app/            FastAPI service: api/ core/ models/ services/ repositories/
 tests/          unit/ integration/ security/
-scripts/        ai_review.py · canary_analysis.py
+scripts/        canary_analysis.py
 prompts/        code-review.md — the AI reviewer's system prompt
 examples/       intentionally vulnerable snippets, isolated from app/
 docs/           architecture, AI review strategy, deployment, threat model, ML extension

@@ -58,26 +58,40 @@ might raise — see [ADR-002](adr/002-ai-review-focuses-on-production-risk.md).
 ## Implementation
 
 `.github/workflows/ai-review.yml` runs after `ci.yml` and `security.yml`,
-calling `scripts/ai_review.py`. That script defines a small `Reviewer`
-protocol:
+delegating to [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action) —
+a standalone, stack-agnostic GitHub Action, not code embedded in this repo.
+See [ADR-005](adr/005-ai-review-is-a-shared-versioned-action.md) for why
+review logic lives in its own versioned repo rather than here: it means the
+same reviewer is usable from any other repo (a different language, a
+different team) with one `uses:` line, and a fix or prompt improvement made
+there benefits every consumer without a copy-paste sync.
+
+This repo customizes the action's default prompt via its
+`system-prompt-path` input, pointing at this repo's own
+[`prompts/code-review.md`](../prompts/code-review.md) — which adds
+references to this repo's specific deterministic tooling (ruff, mypy,
+Bandit, pip-audit) and its own ADRs, on top of the action's stack-agnostic
+base prompt.
+
+The action's `Reviewer` protocol is the extension point for adding a
+provider beyond the shipped `AnthropicReviewer`:
 
 ```python
 class Reviewer(Protocol):
     def review(self, diff: str, system_prompt: str) -> str: ...
 ```
 
-`AnthropicReviewer` is the only implementation in this reference repo, but
-swapping to OpenAI, CodeRabbit, or an in-house model means implementing this
-one method — the workflow YAML and merge-gate logic don't change. The model
-receives the PR diff (`examples/` is excluded from the diff sent to the
-model, since it is intentionally vulnerable code that would generate noise)
-plus the system prompt, and is asked to return the JSON finding array
-directly.
+Swapping to OpenAI, CodeRabbit, or an in-house model means implementing this
+one method in the action repo — this repo's workflow YAML and merge-gate
+logic don't change. The model receives the PR diff (`examples/` is excluded
+via the action's `exclude-paths` input, since it is intentionally vulnerable
+code that would generate noise) plus the system prompt, and is asked to
+return the JSON finding array directly.
 
 ## Failure modes and how they're handled
 
 - **No API key configured** (e.g. a fork PR, or a repo that hasn't set the
-  secret yet): the script exits 0 with an explanatory comment. An
+  secret yet): the action exits 0 with an explanatory comment. An
   unavailable AI reviewer must never become a way to block all merges —
   deterministic checks and human review are unaffected.
 - **Model returns unparseable output**: treated as a tooling failure, not a
