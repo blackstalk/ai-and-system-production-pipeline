@@ -58,7 +58,7 @@ might raise — see [ADR-002](adr/002-ai-review-focuses-on-production-risk.md).
 ## Implementation
 
 `.github/workflows/ai-review.yml` runs after `ci.yml` and `security.yml`,
-delegating to [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action) —
+delegating to [`blackstalk-labs/ai-review-action`](https://github.com/blackstalk-labs/ai-review-action) —
 a standalone, stack-agnostic GitHub Action, not code embedded in this repo.
 See [ADR-005](adr/005-ai-review-is-a-shared-versioned-action.md) for why
 review logic lives in its own versioned repo rather than here: it means the

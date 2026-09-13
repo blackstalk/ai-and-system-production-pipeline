@@ -6,7 +6,7 @@ name: AI Review
 # lint issues those already own.
 #
 # Delegates to the standalone, stack-agnostic ai-review-action
-# (github.com/blackstalk/ai-review-action) rather than embedding the
+# (github.com/blackstalk-labs/ai-review-action) rather than embedding the
 # review logic here — see ADR-005. That action is shared across
 # multiple repos with different stacks; this repo just calls it and
 # supplies its own customized prompt.
@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 0
 
       - name: Run AI review
-        uses: blackstalk/ai-review-action@v1
+        uses: blackstalk-labs/ai-review-action@v1
         with:
           anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
           base-ref: origin/${{ github.event.pull_request.base.ref }}

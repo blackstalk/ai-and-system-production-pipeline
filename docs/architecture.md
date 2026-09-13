@@ -90,7 +90,7 @@ kind of engineering honesty this repo is trying to demonstrate.
 | FastAPI app, tests, structured logging, metrics | Real, runnable |
 | ruff / mypy / Bandit / pip-audit | Real, runnable, wired into CI |
 | `ci.yml`, `security.yml` | Real GitHub Actions, no secrets required |
-| `ai-review.yml` | Real workflow; delegates to [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action), which calls the live Anthropic API when `ANTHROPIC_API_KEY` is set, skips gracefully otherwise |
+| `ai-review.yml` | Real workflow; delegates to [`blackstalk-labs/ai-review-action`](https://github.com/blackstalk-labs/ai-review-action), which calls the live Anthropic API when `ANTHROPIC_API_KEY` is set, skips gracefully otherwise |
 | Canary deployment (`docker-compose.yml`, nginx `split_clients`) | Real, runs locally; a **reference pattern** for what a cloud load balancer / service mesh / K8s controller would do, not a production controller itself |
 | `scripts/canary_analysis.py` | Real logic against a real local Prometheus; the promote/rollback thresholds are illustrative |
 | `deploy.yml` "production" deployment | Simulated — deploys to the workflow runner itself, not a cloud environment. Documented as a **reference implementation** of the sequence, not a cloud deployment |

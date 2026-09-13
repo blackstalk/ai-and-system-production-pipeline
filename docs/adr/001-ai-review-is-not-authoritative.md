@@ -33,7 +33,7 @@ defense-in-depth pipeline, never the sole gate. Concretely:
   have over any other CI check.
 - The AI reviewer being unavailable (no API key, API outage, unparseable
   response) never blocks a merge by itself — see
-  [`ai-review-action`](https://github.com/blackstalk/ai-review-action)'s
+  [`ai-review-action`](https://github.com/blackstalk-labs/ai-review-action)'s
   graceful-skip behavior.
 - A human must approve every PR regardless of AI review outcome — see
   [ADR-004](004-human-remains-final-decision-maker.md).

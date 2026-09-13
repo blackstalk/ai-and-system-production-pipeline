@@ -5,9 +5,9 @@ safely: AI writes it, AI reviews it, deterministic systems verify it,
 canary deployment and monitoring catch what slips through, and a human
 makes the final call at every point that matters.
 
-[![CI](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
-[![Security](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/security.yml/badge.svg)](.github/workflows/security.yml)
-[![AI Review](https://github.com/blackstalk/ai-and-system-production-pipeline/actions/workflows/ai-review.yml/badge.svg)](.github/workflows/ai-review.yml)
+[![CI](https://github.com/blackstalk-labs/ai-and-system-production-pipeline/actions/workflows/ci.yml/badge.svg)](.github/workflows/ci.yml)
+[![Security](https://github.com/blackstalk-labs/ai-and-system-production-pipeline/actions/workflows/security.yml/badge.svg)](.github/workflows/security.yml)
+[![AI Review](https://github.com/blackstalk-labs/ai-and-system-production-pipeline/actions/workflows/ai-review.yml/badge.svg)](.github/workflows/ai-review.yml)
 
 ## Why This Exists
 
@@ -101,7 +101,7 @@ next one will be. Each layer covers what the others structurally can't:
 
 ## AI Review Strategy
 
-Review is performed by [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action),
+Review is performed by [`blackstalk-labs/ai-review-action`](https://github.com/blackstalk-labs/ai-review-action),
 a standalone, stack-agnostic GitHub Action — this repo's
 [`ai-review.yml`](.github/workflows/ai-review.yml) just calls it, passing
 its own customized prompt ([`prompts/code-review.md`](prompts/code-review.md)).
@@ -175,7 +175,7 @@ python3 scripts/canary_analysis.py --prometheus-url http://localhost:9090
 |---|---|---|---|
 | [`ci.yml`](.github/workflows/ci.yml) | every PR, push to `main` | No | ruff, mypy, pytest + coverage, Docker build validation |
 | [`security.yml`](.github/workflows/security.yml) | every PR, push to `main`, weekly | No | Bandit, pip-audit, unsafe-config checks, secret-scanning guidance |
-| [`ai-review.yml`](.github/workflows/ai-review.yml) | every PR | Yes — `ANTHROPIC_API_KEY`, skips gracefully if unset | Calls [`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action); posts findings as a PR comment, fails on CRITICAL/HIGH |
+| [`ai-review.yml`](.github/workflows/ai-review.yml) | every PR | Yes — `ANTHROPIC_API_KEY`, skips gracefully if unset | Calls [`blackstalk-labs/ai-review-action`](https://github.com/blackstalk-labs/ai-review-action); posts findings as a PR comment, fails on CRITICAL/HIGH |
 | [`deploy.yml`](.github/workflows/deploy.yml) | push to `main` (after merge) | No (simulated deploy target) | Build artifact → canary deploy → observe → promote/rollback |
 
 ## Canary Strategy

@@ -22,12 +22,12 @@ Actions doesn't really support cleanly.
 ## Decision
 
 Extract the review engine, prompt, and composite action definition into
-[`blackstalk/ai-review-action`](https://github.com/blackstalk/ai-review-action),
+[`blackstalk-labs/ai-review-action`](https://github.com/blackstalk-labs/ai-review-action),
 a standalone, independently versioned (semver-tagged) repo. This repo
 consumes it the same way any other repo would:
 
 ```yaml
-- uses: blackstalk/ai-review-action@v1
+- uses: blackstalk-labs/ai-review-action@v1
   with:
     anthropic-api-key: ${{ secrets.ANTHROPIC_API_KEY }}
     base-ref: origin/${{ github.event.pull_request.base.ref }}
