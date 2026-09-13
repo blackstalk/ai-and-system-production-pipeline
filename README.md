@@ -161,7 +161,8 @@ make ci   # ruff + mypy + pytest + bandit + pip-audit
 ```
 
 Simulate the full canary deployment locally (stable + canary containers
-behind a weighted nginx router, scraped by Prometheus):
+behind a weighted nginx router, scraped by Prometheus) — requires Docker
+Desktop (or another local Docker daemon) running:
 
 ```bash
 make docker-canary   # docker compose up --build
